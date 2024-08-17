@@ -1,6 +1,6 @@
 * Configuration
 ** Prerequisites
-- git must me installed
+- git must be installed
 - For Windows: junction.exe must be available
   - See Microsoft documentation for Junction
 ** Installation
