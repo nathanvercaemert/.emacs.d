@@ -1,12 +1,18 @@
+* Installation
+- Windows zip download:
+  - https://mirror.us-midwest-1.nexcess.net/gnu/emacs/windows/emacs-29/emacs-29.4.zip
+- Windows application: once extracted, create a shortcut to runemacs.exe
 * Configuration
 ** Prerequisites
 - git must be installed
 - For Windows: junction.exe must be available
   - See Microsoft documentation for Junction
-** Installation
-- From the folder containing junction.exe, run the following command:
+** Link Configration File
+- Windows link: from the folder containing junction.exe, run the following command:
   - ./junction.exe target-directory source-directory
   - source-directory is the dowload location of .emacs.d
-  - target-directory is the directory from which Emacs loads init.el
-- Example command for Windows installation:
+  - directory is the directory from which Emacs loads init.el
+- Junction dowload:
+  - https://learn.microsoft.com/en-us/sysinternals/downloads/junction
+- Example command for Windows link:
   - ./junction.exe C:\Users\nverc\AppData\Roaming\.emacs.d C:\Users\nverc\Dropbox\repositories\.emacs.d\
