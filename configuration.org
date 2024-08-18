@@ -1,3 +1,4 @@
+* straight.el
 #+BEGIN_SRC emacs-lisp
   (defvar bootstrap-version)
   (let ((bootstrap-file
@@ -14,5 +15,15 @@
 	(goto-char (point-max))
 	(eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
+#+END_SRC
+* yasnippet
+#+BEGIN_SRC emacs-lisp
   (straight-use-package 'yasnippet)
+  (use-package yasnippet
+    :straight t
+    :config
+    (yas-global-mode 1)
+    :bind
+    (("<f6> s" . yas-expand))
+    )
 #+END_SRC
