@@ -5,6 +5,7 @@
 * Configuration
 ** Prerequisites
 - git must be installed
+  - remember to add bin and cmd (from git installation) to PATH
 - For Windows: junction.exe must be available
   - See Microsoft documentation for Junction
 ** Link Configration File
