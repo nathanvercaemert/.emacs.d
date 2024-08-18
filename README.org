@@ -15,4 +15,4 @@
 - Junction dowload:
   - https://learn.microsoft.com/en-us/sysinternals/downloads/junction
 - Example command for Windows link:
-  - ./junction.exe C:\Users\nverc\AppData\Roaming\.emacs.d C:\Users\nverc\Dropbox\repositories\.emacs.d\
+  - .\junction.exe C:\Users\nverc\AppData\Roaming\\.emacs.d C:\Users\nverc\Dropbox\repositories\\.emacs.d\
