@@ -234,13 +234,14 @@ C-q 'undo-tree-visualizer-abort
     :diminish
     :config
     (global-undo-tree-mode +1)
-    (bind-key "M-<f5> M-4" 'undo-tree-visualize)
-    (bind-key "C-<f5> C-4"  'undo-tree-redo))
+    :bind
+    (("M-<f5> M-4" . undo-tree-visualize)
+     ("M-<f5> C-4" . undo-tree-redo)))
 #+END_SRC
 * dired
 ** do what I mean target
 #+BEGIN_SRC emacs-lisp
-(setq dired-dwim-target t)
+  (setq dired-dwim-target t)
 #+END_SRC
 ** make file sizes make sense
 #+BEGIN_SRC emacs-lisp
@@ -249,9 +250,9 @@ C-q 'undo-tree-visualizer-abort
 #+END_SRC
 ** make copies recursive always
 #+BEGIN_SRC emacs-lisp
-(setq dired-recursive-copies 'always)
+  (setq dired-recursive-copies 'always)
 #+END_SRC
-* (auto revert) reload files when changed externally
+* reload files when changed externally (auto revert)
 ** turn auto-revert-mode on everywhere
 #+BEGIN_SRC emacs-lisp
   (global-auto-revert-mode)
@@ -261,12 +262,11 @@ C-q 'undo-tree-visualizer-abort
   (setq auto-revert-verbose nil)
   (setq auto-revert-interval 1)
 #+END_SRC
-
-* system settings (prompts, interaction log)
+* system settings (prompts, interaction log, etc.)
 ** prompts
 *** yes or no -> y or p
 #+BEGIN_SRC emacs-lisp
-(fset 'yes-or-no-p 'y-or-n-p)
+  (fset 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 *** kill processes without confirmation
 #+BEGIN_SRC emacs-lisp
@@ -285,22 +285,13 @@ C-q 'undo-tree-visualizer-abort
                 (display-buffer ilog-buffer-name))))
 #+END_SRC
 ** safe local variables
-this takes care of an annoying (and outdated?) prompt
+- this takes care of an annoying prompt
 #+BEGIN_SRC emacs-lisp
-(setq enable-local-variables :safe)
+  (setq enable-local-variables :safe)
 #+END_SRC
 ** clipboard
 #+BEGIN_SRC emacs-lisp
   (setq save-interprogram-paste-before-kill t)
-#+END_SRC
-* selection
-** delete highlighted text
-#+BEGIN_SRC emacs-lisp
-  (delete-selection-mode 1)
-#+END_SRC
-** shift selection
-#+BEGIN_SRC emacs-lisp
-  (setq shift-select-mode t)
 #+END_SRC
 * navigation
 ** scrolling
@@ -317,21 +308,20 @@ this takes care of an annoying (and outdated?) prompt
   (setq scroll-preserve-screen-position 'always)
 #+END_SRC
 *** half page and one line scroll
-these are from view.el in master
+- these are from view.el in master
 #+BEGIN_SRC emacs-lisp
   (autoload 'View-scroll-half-page-forward "view")
   (autoload 'View-scroll-half-page-backward "view")
   (autoload 'View-scroll-line-forward "view")
   (autoload 'View-scroll-line-backward "view")
-  (global-set-key (kbd "<f7> f") 'View-scroll-half-page-forward)
-  (global-set-key (kbd "<f7> g") 'View-scroll-half-page-backward)
-  (global-set-key (kbd "<f5> w") 'View-scroll-line-forward)
-  (global-set-key (kbd "<f5> v") 'View-scroll-line-backward)
+  (bind-key "<f7> f" 'View-scroll-half-page-forward)
+  (bind-key "<f7> g" 'View-scroll-half-page-backward)
+  (bind-key "<f5> w" 'View-scroll-line-forward)
+  (bind-key "<f5> v" 'View-scroll-line-backward)
 #+END_SRC
 ** paragraph motion and shift selection
+- custom functions because paragraph shift selection doesn't work the way I like out of the box
 #+BEGIN_SRC emacs-lisp
-  ;; custom functions because paragraph shift selection
-  ;; doesn't work the way I like out of the box
   (defun my-backward-paragraph-with-shift-select ()
     (interactive)
     (setq this-command-keys-shift-translated t)
@@ -340,22 +330,17 @@ these are from view.el in master
     (interactive)
     (setq this-command-keys-shift-translated t)
     (call-interactively 'forward-paragraph))
-
   (bind-key "<f5> 3" 'forward-paragraph)
   (bind-key "S-<f5> #" 'my-forward-paragraph-with-shift-select)
   (bind-key "<f5> 2" 'backward-paragraph)
   (bind-key "S-<f5> @" 'my-backward-paragraph-with-shift-select)
 #+END_SRC
-** mark ring 
-*** is mark at point
+** mark ring
 #+BEGIN_SRC emacs-lisp
-(defun marker-is-point-p (marker)
-  "test if marker is current point"
-  (and (eq (marker-buffer marker) (current-buffer))
-       (= (marker-position marker) (point))))
-#+END_SRC
-*** local push mark maybe
-#+BEGIN_SRC emacs-lisp
+  (defun marker-is-point-p (marker)
+    "test if marker is current point"
+    (and (eq (marker-buffer marker) (current-buffer))
+         (= (marker-position marker) (point))))
   (defun push-local-mark-maybe () 
     "push mark onto `local-mark-ring' if mark head or tail is not current location"
     (if (not mark-ring) (error "local-mark-ring empty")
@@ -363,67 +348,51 @@ these are from view.el in master
                   (marker-is-point-p (car (reverse mark-ring))))
         (push-mark)
         (pop-to-mark-command))))
-#+END_SRC
-*** local back mark
-#+BEGIN_SRC emacs-lisp
-    (defun backward-local-mark()
-      "pop local mark, pushing current point if not on ring"
-      (interactive)
-      (push-local-mark-maybe)
-      (pop-to-mark-command))
-(bind-key "<f6> v" 'backward-local-mark)
-#+END_SRC
-
-*** local forward mark
-#+BEGIN_SRC emacs-lisp
-(defun unpop-to-mark-command ()
-  "Unpop off mark ring. Does nothing if mark ring is empty."
-  (interactive)
-  (push-local-mark-maybe)
-      (when mark-ring
-        (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
-        (set-marker (mark-marker) (car (last mark-ring)) (current-buffer))
-        (when (null (mark t)) (ding))
-        (setq mark-ring (nbutlast mark-ring))
-        (goto-char (marker-position (car (last mark-ring))))))
-(bind-key "<f5> z" 'unpop-to-mark-command)
-#+END_SRC
-*** global push mark maybe
-#+BEGIN_SRC emacs-lisp
+  (defun backward-local-mark()
+    "pop local mark, pushing current point if not on ring"
+    (interactive)
+    (push-local-mark-maybe)
+    (pop-to-mark-command))
+  (defun unpop-to-mark-command ()
+    "Unpop off mark ring. Does nothing if mark ring is empty."
+    (interactive)
+    (push-local-mark-maybe)
+    (when mark-ring
+      (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
+      (set-marker (mark-marker) (car (last mark-ring)) (current-buffer))
+      (when (null (mark t)) (ding))
+      (setq mark-ring (nbutlast mark-ring))
+      (goto-char (marker-position (car (last mark-ring))))))
   (defun push-global-mark-maybe () 
     "push mark onto `global-mark-ring' if mark head or tail is not current location"
     (if (not global-mark-ring) (error "global-mark-ring empty")
       (unless (or (marker-is-point-p (car global-mark-ring))
                   (marker-is-point-p (car (reverse global-mark-ring))))
         (push-mark))))
-#+END_SRC
-*** global back mark
-#+BEGIN_SRC emacs-lisp
-(defun backward-global-mark () 
-  "use `pop-global-mark', pushing current point if not on ring."
-  (interactive)
-  (push-global-mark-maybe)
-  (when (marker-is-point-p (car global-mark-ring))
+  (defun backward-global-mark () 
+    "use `pop-global-mark', pushing current point if not on ring."
+    (interactive)
+    (push-global-mark-maybe)
+    (when (marker-is-point-p (car global-mark-ring))
+      (call-interactively 'pop-global-mark))
     (call-interactively 'pop-global-mark))
-  (call-interactively 'pop-global-mark))
-(bind-key "<f6> u" 'backward-global-mark)
-#+END_SRC
-*** global forward mark
-#+BEGIN_SRC emacs-lisp
-(defun forward-global-mark ()
-  "hack `pop-global-mark' to go in reverse, pushing current point if not on ring."
-  (interactive)
-  (push-global-mark-maybe)
-  (setq global-mark-ring (nreverse global-mark-ring))
-  (when (marker-is-point-p (car global-mark-ring))
-    (call-interactively 'pop-global-mark))
-  (call-interactively 'pop-global-mark)
-  (setq global-mark-ring (nreverse global-mark-ring)))
-(bind-key "<f6> f" 'forward-global-mark)
+  (defun forward-global-mark ()
+    "hack `pop-global-mark' to go in reverse, pushing current point if not on ring."
+    (interactive)
+    (push-global-mark-maybe)
+    (setq global-mark-ring (nreverse global-mark-ring))
+    (when (marker-is-point-p (car global-mark-ring))
+      (call-interactively 'pop-global-mark))
+    (call-interactively 'pop-global-mark)
+    (setq global-mark-ring (nreverse global-mark-ring)))
+  (bind-key "<f6> v" 'backward-local-mark)
+  (bind-key "<f5> z" 'unpop-to-mark-command)
+  (bind-key "<f6> u" 'backward-global-mark)
+  (bind-key "<f6> f" 'forward-global-mark)
 #+END_SRC
 ** visible mark
-my repo coming from:  https://git.sr.ht/~iank/visible-mark
-which is the new location originally moved from: https://gitlab.com/iankelling/visible-mark
+- my repo coming from:  https://git.sr.ht/~iank/visible-mark
+- which is the new location originally moved from: https://gitlab.com/iankelling/visible-mark
 #+BEGIN_SRC emacs-lisp
   (straight-use-package '(visible-mark :type git :host github :repo "nathanvercaemert/visible-mark"))
   (defface visible-mark-active
@@ -444,16 +413,116 @@ which is the new location originally moved from: https://gitlab.com/iankelling/v
   (require 'visible-mark)
   (global-visible-mark-mode 1)
 #+END_SRC
-** sentences have one space after period
+* bookmarks
+** only list the names of bookmarks
 #+BEGIN_SRC emacs-lisp
-(setq sentence-end-double-space nil)
+  (setq bookmark-bmenu-toggle-filenames nil)
 #+END_SRC
-
+** save bookmarks with every bookmark action
+#+BEGIN_SRC emacs-lisp
+  (setq bookmark-save-flag 1)
+#+END_SRC
+* shell
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f6> d" 'shell)
+  (defun create-named-shell ()
+    "creates a shell with a given name"
+    (interactive);; "Prompt\n shell name:")
+    (let ((shell-name (read-string "shell name: " nil)))
+      (shell (concat "*" shell-name "*"))))
+  (bind-key "<f6> g" 'create-named-shell)
+#+END_SRC
+* appearances
+** no scratch buffer description
+#+BEGIN_SRC emacs-lisp
+  (setq initial-scratch-message nil)
+#+END_SRC
+** toggle linum mode
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f8> a d" 'linum-mode)
+#+END_SRC
+** toggle truncate lines
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f8> a e" 'toggle-truncate-lines)
+#+END_SRC
+** visual line mode (word wrapping)
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'text-mode-hook #'visual-line-mode)
+#+END_SRC
+** default to not truncating lines in minibuffer
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'minibuffer-setup-hook
+            (lambda () (setq truncate-lines nil)))
+#+END_SRC
+** rainbow mode
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-mode
+    :straight t
+    :hook
+    (prog-mode . rainbow-mode))
+#+END_SRC
+* completion
+** ivy
+#+BEGIN_SRC emacs-lisp
+  (use-package ivy
+    :straight t
+    :demand t
+    :config
+    (setq ivy-re-builders-alist
+          '((t . ivy--regex-fuzzy)))
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-count-format "(%d/%d) ")
+    (setq ivy-height 15)
+    (setq ivy-display-style 'fancy)
+    (ivy-mode)
+    :bind
+    (("<f5> s" . counsel-imenu)
+     ("<f7> c" . counsel-M-x)
+     ("<f6> 9" . counsel-find-file)))
+#+END_SRC
+** company
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :straight t
+    :defer t
+    :hook
+    (prog-mode . company-mode)
+    (text-mode . company-mode)
+    :bind
+    (:map company-active-map
+          ("<tab>" . company-complete-common))
+    :custom
+    (company-require-match nil)
+    (company-idle-delay 0)
+    :config
+    (defun my-company-prog-hook ()
+      (setq-local company-backends '((company-dabbrev-code company-files))))
+    (defun my-company-text-hook ()
+      (setq-local company-backends '((company-files))))
+    (add-hook 'prog-mode-hook #'my-company-prog-hook)
+    (add-hook 'text-mode-hook #'my-company-text-hook))
+#+END_SRC
+** flx
+#+BEGIN_SRC emacs-lisp
+  (use-package flx
+    :straight t)
+#+END_SRC
+* yasnippet
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :straight t
+    :config
+    (yas-global-mode 1)
+    (define-key yas-minor-mode-map [(tab)] nil)
+    (define-key yas-minor-mode-map (kbd "TAB") nil)
+    :bind
+    (("<f6> s" . yas-expand)))
+#+END_SRC
 * text editing
 ** duplicate line or region
-taken from tuxicity
-https://rejeep.github.io/emacs/elisp/2010/03/11/duplicate-current-line-or-region-in-emacs.html
-note that M-NumDuplicate or C-u NumDuplicate is the way to prefix multiple
+- taken from tuxicity
+- https://rejeep.github.io/emacs/elisp/2010/03/11/duplicate-current-line-or-region-in-emacs.html
+- note that M-NumDuplicate or C-u NumDuplicate is the way to prefix multiple
 #+BEGIN_SRC emacs-lisp
   (defun duplicate-current-line-or-region (arg)
     "Duplicates the current line or region ARG times.
@@ -486,8 +555,37 @@ note that M-NumDuplicate or C-u NumDuplicate is the way to prefix multiple
   (setq tab-width 4)
   (setq-default tab-width 4)
   (setq indent-line-function 'insert-tab)
-  (setq-default c-basic-offset 4)
   (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80))
+#+END_SRC
+*** shift by indentation
+#+BEGIN_SRC emacs-lisp
+  (defun my-indent-shift-left ()
+    (interactive
+     (progn
+       (if mark-active
+           (if (> (point) (mark))
+               (exchange-point-and-mark)))
+       (let ((deactivate-mark nil))
+         (if mark-active
+             (indent-rigidly (line-beginning-position) (region-end) (- 4))
+           (indent-rigidly (line-beginning-position) (line-end-position) (- 4)))))
+     )
+    )
+
+  (defun my-indent-shift-right ()
+    (interactive
+     (progn
+       (if mark-active
+           (if (> (point) (mark))
+               (exchange-point-and-mark)))
+       (let ((deactivate-mark nil))
+         (if mark-active
+             (indent-rigidly (line-beginning-position) (region-end) 4)
+           (indent-rigidly (line-beginning-position) (line-end-position) 4))))
+     )
+    )
+  (bind-key "<f5> n" 'my-indent-shift-right)
+  (bind-key "<f5> o" 'my-indent-shift-left)
 #+END_SRC
 ** drag stuff
 #+BEGIN_SRC emacs-lisp
@@ -496,6 +594,123 @@ note that M-NumDuplicate or C-u NumDuplicate is the way to prefix multiple
     :bind
     ("<f6> x" . 'drag-stuff-up)
     ("<f6> y" . 'drag-stuff-down))
+#+END_SRC
+** commenting
+found this on stack overflow
+name based on functionality being like eclipse
+#+BEGIN_SRC emacs-lisp
+  (defun comment-eclipse ()
+    (interactive)
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
+      (when (or (not transient-mark-mode) (region-active-p))
+        (setq start (save-excursion
+                      (goto-char (region-beginning))
+                      (beginning-of-line)
+                      (point))
+              end (save-excursion
+                    (goto-char (region-end))
+                    (end-of-line)
+                    (point))))
+      (comment-or-uncomment-region start end)))
+  (bind-key "<f7> a" 'comment-eclipse)
+#+END_SRC
+** multiple cursors
+#+BEGIN_SRC emacs-lisp
+  (use-package multiple-cursors
+    :straight t
+    :preface
+    (setq mc/list-file "~/.emacs.d/.mc-lists.el")
+    :bind
+    (("<f6> k" . 'mc/mark-next-like-this)
+     ("<f6> l" . 'mc/mark-previous-like-this)
+     ("<f6> m" . 'mc/mark-all-like-this)
+     ("<f6> n" . 'mc/unmark-next-like-this)
+     ("<f6> o" . 'mc/unmark-previous-like-this)
+     ("<mouse-8>" . 'mc/add-cursor-on-click) ;; qmk btn4 reads as 8
+     ))
+  (use-package phi-search
+    :straight t)
+#+END_SRC
+** expand region
+#+BEGIN_SRC emacs-lisp
+  (use-package expand-region
+    :straight t
+    :defer 3
+    :config
+    (defun my-mark-symbol ()
+      (interactive)
+      (push-mark)
+      (er/mark-symbol))
+    (defun my-mark-word ()
+      (interactive)
+      (push-mark)
+      (er/mark-word))
+    (defun my-mark-inside-quotes ()
+      (interactive)
+      (push-mark)
+      (er/mark-inside-quotes))
+    (defun my-mark-outside-quotes ()
+      (interactive)
+      (push-mark)
+      (er/mark-outside-quotes))
+    (defun my-mark-outside-pairs ()
+      (interactive)
+      (push-mark)
+      (er/mark-outside-pairs))
+    (defun my-mark-inside-pairs ()
+      (interactive)
+      (push-mark)
+      (er/mark-inside-pairs))
+    (defun my-mark-comment ()
+      (interactive)
+      (push-mark)
+      (er/mark-comment))
+    (defun my-mark-next-accessor ()
+      (interactive)
+      (push-mark)
+      (er/mark-next-accessor))
+    (defun my-mark-method-call ()
+      (interactive)
+      (push-mark)
+      (er/mark-method-call))
+    (bind-key "<f5> t" 'my-mark-symbol)
+    (bind-key "<f5> u" 'my-mark-word)
+    (bind-key "<f5> y" 'my-mark-inside-quotes)
+    (bind-key "<f5> x" 'my-mark-outside-quotes)
+    (bind-key "<f5> 5" 'my-mark-outside-pairs)
+    (bind-key "<f5> 6" 'my-mark-inside-pairs)
+    (bind-key "<f6> 2" 'my-mark-comment)
+    (bind-key "<f6> 1" 'my-mark-next-accessor)
+    (bind-key "<f6> 3" 'my-mark-method-call)
+    )
+#+END_SRC
+** electric pair mode
+#+BEGIN_SRC emacs-lisp
+  (electric-pair-mode)
+
+  ;; inhibit double and single quotes (because there is a bug with double quotes in org mode)
+  ;; bug: if you type (no quotes here, just literal typing) "test", then "test"" appears
+  ;; this extra " causes problems
+  (setq electric-pair-inhibit-predicate
+        (lambda (c)
+          (if (or (char-equal c ?\') (char-equal c ?\")) t (electric-pair-default-inhibit c))))
+#+END_SRC
+** kill word
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f7> b" 'kill-word)
+#+END_SRC
+** delete highlighted text
+#+BEGIN_SRC emacs-lisp
+  (delete-selection-mode 1)
+#+END_SRC
+** shift selection
+#+BEGIN_SRC emacs-lisp
+  (setq shift-select-mode t)
+#+END_SRC
+** sentences have one space after period
+#+BEGIN_SRC emacs-lisp
+(setq sentence-end-double-space nil)
 #+END_SRC
 ** my-delete-all-lines-in-region
 different than the built-in in that it deletes the newline before the killed line instead of after
@@ -942,258 +1157,3 @@ different than the built-in in that it deletes the newline before the killed lin
 **** copy-2-4
 **** copy-2-4-reverse
 **** killing a few lines one at a time can then be yanked correctly
-** commenting
-found this on stack overflow
-name based on functionality being like eclipse
-#+BEGIN_SRC emacs-lisp
-  (defun comment-eclipse ()
-    (interactive)
-    (let ((start (line-beginning-position))
-          (end (line-end-position)))
-      (when (or (not transient-mark-mode) (region-active-p))
-        (setq start (save-excursion
-                      (goto-char (region-beginning))
-                      (beginning-of-line)
-                      (point))
-              end (save-excursion
-                    (goto-char (region-end))
-                    (end-of-line)
-                    (point))))
-      (comment-or-uncomment-region start end)))
-  (bind-key (kbd "<f7> a") 'comment-eclipse)
-#+END_SRC
-** multiple cursors
-*** straight
-#+BEGIN_SRC emacs-lisp
-#+END_SRC
-*** lists of commands to run once/for all
-this needs to be run before requiring multiple cursors
-#+BEGIN_SRC emacs-lisp
-  (setq mc/list-file "~/.emacs.d/.mc-lists.el")
-#+END_SRC
-*** setup
-#+BEGIN_SRC emacs-lisp
-  (use-package multiple-cursors
-    :straight t)
-#+END_SRC
-*** hotkeys
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f6> k" 'mc/mark-next-like-this)
-  (bind-key "<f6> l" 'mc/mark-previous-like-this)
-  (bind-key "<f6> m" 'mc/mark-all-like-this)
-  (bind-key "<f6> n" 'mc/unmark-next-like-this)
-  (bind-key "<f6> o" 'mc/unmark-previous-like-this)
-  (bind-key "<mouse-8>" 'mc/add-cursor-on-click) ;; qmk btn4 reads as 8
-#+END_SRC
-*** phi-search
-#+BEGIN_SRC emacs-lisp
-  (use-package phi-search
-    :straight t)
-#+END_SRC
-** expand region
-#+BEGIN_SRC emacs-lisp
-  (use-package expand-region
-    :straight t
-    :defer 3
-    :config
-    (defun my-mark-symbol ()
-      (interactive)
-      (push-mark)
-      (er/mark-symbol))
-    (defun my-mark-word ()
-      (interactive)
-      (push-mark)
-      (er/mark-word))
-    (defun my-mark-inside-quotes ()
-      (interactive)
-      (push-mark)
-      (er/mark-inside-quotes))
-    (defun my-mark-outside-quotes ()
-      (interactive)
-      (push-mark)
-      (er/mark-outside-quotes))
-    (defun my-mark-outside-pairs ()
-      (interactive)
-      (push-mark)
-      (er/mark-outside-pairs))
-    (defun my-mark-inside-pairs ()
-      (interactive)
-      (push-mark)
-      (er/mark-inside-pairs))
-    (defun my-mark-comment ()
-      (interactive)
-      (push-mark)
-      (er/mark-comment))
-    (defun my-mark-next-accessor ()
-      (interactive)
-      (push-mark)
-      (er/mark-next-accessor))
-    (defun my-mark-method-call ()
-      (interactive)
-      (push-mark)
-      (er/mark-method-call))
-    (bind-key "<f5> t" 'my-mark-symbol)
-    (bind-key "<f5> u" 'my-mark-word)
-    (bind-key "<f5> y" 'my-mark-inside-quotes)
-    (bind-key "<f5> x" 'my-mark-outside-quotes)
-    (bind-key "<f5> 5" 'my-mark-outside-pairs)
-    (bind-key "<f5> 6" 'my-mark-inside-pairs)
-    (bind-key "<f6> 2" 'my-mark-comment)
-    (bind-key "<f6> 1" 'my-mark-next-accessor)
-    (bind-key "<f6> 3" 'my-mark-method-call)
-    )
-#+END_SRC
-** electric pair mode
-- test 
-#+BEGIN_SRC emacs-lisp
-  (electric-pair-mode)
-
-  ;; inhibit double and single quotes (because there is a bug with double quotes in org mode)
-  ;; bug: if you type (no quotes here, just literal typing) "test", then "test"" appears
-  ;; this extra " causes problems
-  (setq electric-pair-inhibit-predicate
-        (lambda (c)
-          (if (or (char-equal c ?\') (char-equal c ?\")) t (electric-pair-default-inhibit c))))
-#+END_SRC
-** shift by indentation
-#+BEGIN_SRC emacs-lisp
-  (defun my-indent-shift-left ()
-    (interactive
-     (progn
-       (if mark-active
-           (if (> (point) (mark))
-               (exchange-point-and-mark)))
-       (let ((deactivate-mark nil))
-         (if mark-active
-             (indent-rigidly (line-beginning-position) (region-end) (- 4))
-           (indent-rigidly (line-beginning-position) (line-end-position) (- 4)))))
-     )
-    )
-
-  (defun my-indent-shift-right ()
-    (interactive
-     (progn
-       (if mark-active
-           (if (> (point) (mark))
-               (exchange-point-and-mark)))
-       (let ((deactivate-mark nil))
-         (if mark-active
-             (indent-rigidly (line-beginning-position) (region-end) 4)
-           (indent-rigidly (line-beginning-position) (line-end-position) 4))))
-     )
-    )
-
-  (bind-key "<f5> n" 'my-indent-shift-right)
-  (bind-key "<f5> o" 'my-indent-shift-left)
-#+END_SRC
-** kill word
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f7> b" 'kill-word)
-#+END_SRC
-* bookmarks
-** only list the names of bookmarks
-#+BEGIN_SRC emacs-lisp
-  (setq bookmark-bmenu-toggle-filenames nil)
-#+END_SRC
-
-** save bookmarks with every bookmark action
-#+BEGIN_SRC emacs-lisp
-(setq bookmark-save-flag 1)
-#+END_SRC
-* shell
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f6> d" 'shell)
-  (defun create-named-shell ()
-    "creates a shell with a given name"
-    (interactive);; "Prompt\n shell name:")
-    (let ((shell-name (read-string "shell name: " nil)))
-    (shell (concat "*" shell-name "*"))))
-  (bind-key "<f6> g" 'create-named-shell)
-#+END_SRC
-* appearances
-** no scratch buffer description
-#+BEGIN_SRC emacs-lisp
-  (setq initial-scratch-message nil)
-#+END_SRC
-** toggle linum mode
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f8> a d" 'linum-mode)
-#+END_SRC
-** toggle truncate lines
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f8> a e" 'toggle-truncate-lines)
-#+END_SRC
-** visual line mode (word wrapping)
-#+BEGIN_SRC emacs-lisp
-(add-hook 'text-mode-hook #'visual-line-mode)
-#+END_SRC
-** default to not truncating lines in minibuffer
-#+BEGIN_SRC emacs-lisp
-(add-hook 'minibuffer-setup-hook
-      (lambda () (setq truncate-lines nil)))
-#+END_SRC
-** rainbow mode
-#+BEGIN_SRC emacs-lisp
-  (use-package rainbow-mode
-    :straight t
-    :hook (prog-mode . rainbow-mode))
-#+END_SRC
-* completion
-** ivy
-#+BEGIN_SRC emacs-lisp
-  (use-package ivy
-    :straight t
-    :demand t
-    :config
-    (setq ivy-re-builders-alist
-          '((t . ivy--regex-fuzzy)))
-    (setq ivy-use-virtual-buffers t)
-    (setq ivy-count-format "(%d/%d) ")
-    (setq ivy-height 15)
-    (setq ivy-display-style 'fancy)
-    (ivy-mode)
-    :bind
-    (("<f5> s" . counsel-imenu)
-     ("<f7> c" . counsel-M-x)
-     ("<f6> 9" . counsel-find-file)))
-#+END_SRC
-** company
-#+BEGIN_SRC emacs-lisp
-  (use-package company
-    :straight t
-    :defer t
-    :hook
-    (prog-mode . company-mode)
-    (text-mode . company-mode)
-    :bind
-    (:map company-active-map
-          ("<tab>" . company-complete-common))
-    :custom
-    (company-require-match nil)
-    (company-idle-delay 0)
-    :config
-    (defun my-company-prog-hook ()
-      (setq-local company-backends '((company-dabbrev-code company-files))))
-    (defun my-company-text-hook ()
-      (setq-local company-backends '((company-files))))
-    (add-hook 'prog-mode-hook #'my-company-prog-hook)
-    (add-hook 'text-mode-hook #'my-company-text-hook)
-    )
-
-#+END_SRC
-** flx
-#+BEGIN_SRC emacs-lisp
-  (use-package flx
-    :straight t)
-#+END_SRC
-* yasnippet
-#+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :straight t
-    :config
-    (yas-global-mode 1)
-    (define-key yas-minor-mode-map [(tab)] nil)
-    (define-key yas-minor-mode-map (kbd "TAB") nil)
-    :bind
-    (("<f6> s" . yas-expand)))
-#+END_SRC
