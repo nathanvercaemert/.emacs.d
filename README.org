@@ -1,8 +1,8 @@
-* Installation
+* Emacs Installation
 - Windows zip download:
   - https://mirror.us-midwest-1.nexcess.net/gnu/emacs/windows/emacs-29/emacs-29.4.zip
 - Windows application: once extracted, create a shortcut to runemacs.exe
-* Configuration
+* Emacs Configuration
 ** Prerequisites
 - git must be installed
   - remember to add bin and cmd (from git installation) to PATH
@@ -17,3 +17,7 @@
   - https://learn.microsoft.com/en-us/sysinternals/downloads/junction
 - Example command for Windows link:
   - .\junction.exe C:\Users\nverc\AppData\Roaming\\.emacs.d C:\Users\nverc\Dropbox\repositories\\.emacs.d\
+* QMK
+** Windows
+- Download the latest msys bundle
+  - https://msys.qmk.fm/
