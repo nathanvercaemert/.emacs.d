@@ -16,14 +16,1184 @@
 	(eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
 #+END_SRC
+* bind-key
+#+BEGIN_SRC emacs-lisp
+  (use-package bind-key
+    :straight t)
+#+END_SRC
+* window and buffer functions
+** split window horizontally or vertically
+#+BEGIN_SRC emacs-lisp
+  (defun my-split-window-vertical ()
+    (interactive)
+    (split-window-below)
+    (other-window 1)
+    (balance-windows))
+  (defun my-split-window-horizontal ()
+    (interactive)
+    (split-window-right)
+    (other-window 1)
+    (balance-windows))
+  (bind-key "<f8> a a" 'my-split-window-vertical)
+  (bind-key "<f8> a b" 'my-split-window-horizontal)
+#+END_SRC
+** kill window
+#+BEGIN_SRC emacs-lisp
+  (defun my-kill-window ()
+    (interactive)
+    (delete-window)
+    (balance-windows))
+  (bind-key "<f8> a c" 'my-kill-window)
+#+END_SRC
+** kill this buffer
+#+BEGIN_SRC emacs-lisp
+  (setq my-do-not-kill-buffer-list '("*scratch*" "*Messages*"))
+  (defun my-kill-buffer-but-not-some ()
+    (interactive)
+    (if (member (buffer-name (current-buffer)) my-do-not-kill-buffer-list)
+        (bury-buffer)
+      (kill-buffer (current-buffer))))
+  (bind-key "<f8> a f" 'my-kill-buffer-but-not-some)
+#+END_SRC
+** windmove
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f5> k" 'windmove-right)
+  (bind-key "<f5> h" 'windmove-up)
+  (bind-key "<f5> i" 'windmove-left)
+  (bind-key "<f5> l" 'windmove-down)
+#+END_SRC
+** my delete other windows
+- I think this forces the "make this the only window" functionality that I want.
+- I've had some issues with the window I want to become the only window not becomming the only window.
+#+BEGIN_SRC emacs-lisp
+  (defun my-delete-other-windows ()
+    (interactive)
+    (setq temp ignore-window-parameters)
+    (setq ignore-window-parameters t)
+    (delete-other-windows)
+    (setq ignore-window-parameters temp)
+    )
+  (bind-key "<f5> m" 'my-delete-other-windows)
+#+END_SRC
+* programming
+** emacs-lisp
+#+BEGIN_SRC emacs-lisp
+  (use-package aggressive-indent
+    :straight t
+    :diminish
+    :hook
+    (emacs-lisp-mode . aggressive-indent-mode))
+#+END_SRC
+** python
+*** org python
+#+BEGIN_SRC emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)))
+  (setq org-babel-python-command "python3")
+#+END_SRC
+*** make sexp normal in python mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'python-mode-hook
+            (lambda () (setq forward-sexp-function nil)))
+#+END_SRC
+** rainbow delimiters
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-delimiters
+    :straight t
+    :config
+    (custom-set-faces
+     '(rainbow-delimiters-depth-1-face ((t (:foreground "#FF5733"))))
+     '(rainbow-delimiters-depth-2-face ((t (:foreground "#33FF57"))))
+     '(rainbow-delimiters-depth-3-face ((t (:foreground "#FF33A1"))))
+     '(rainbow-delimiters-depth-4-face ((t (:foreground "#7DF9FF"))))
+     '(rainbow-delimiters-depth-5-face ((t (:foreground "#1B6B3A"))))
+     '(rainbow-delimiters-depth-6-face ((t (:foreground "#FF3333"))))
+     '(rainbow-delimiters-depth-7-face ((t (:foreground "#000000"))))
+     '(rainbow-delimiters-depth-8-face ((t (:foreground "#A52A2A"))))
+     '(rainbow-delimiters-depth-9-face ((t (:foreground "#0000FF")))))
+    :hook
+    ((prog-mode . rainbow-delimiters-mode)
+     (org-mode . rainbow-delimiters-mode)))
+#+END_SRC
+* org
+** remove unwanted newline for C-RET M-RET
+#+BEGIN_SRC emacs-lisp
+  (setq org-blank-before-new-entry (quote ((heading . nil)
+                                           (plain-list-item . nil))))
+#+END_SRC
+** allow me to set the display of inline images to certain size
+#+BEGIN_SRC emacs-lisp
+  (setq org-image-actual-width nil)
+#+END_SRC
+** start with all headings collapsed
+#+BEGIN_SRC emacs-lisp
+  (setq org-startup-folded t)
+#+END_SRC
+** make headings indented according to level
+#+BEGIN_SRC emacs-lisp
+  (setq org-startup-indented t)
+#+END_SRC
+** move up one heading same level
+- this was a result of docker not processing C-p correctly
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f5> 9" 'org-previous-visible-heading org-mode-map)
+#+END_SRC
+** C-TAB collapses heading
+#+BEGIN_SRC emacs-lisp
+  (bind-key "C-<tab>" 'outline-hide-subtree org-mode-map)
+#+END_SRC
+** don't search through collapsed headings
+#+BEGIN_SRC emacs-lisp
+  (setq search-invisible nil)
+#+END_SRC
+** toggle link display
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f6> h" 'org-toggle-link-display)
+#+END_SRC
+** org follow link
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f6> t" 'org-open-at-point)
+#+END_SRC
+** don't prompt for code evaluation
+#+BEGIN_SRC emacs-lisp
+(setq org-confirm-babel-evaluate nil)
+#+END_SRC
+** todo headlines font fix
+#+BEGIN_SRC emacs-lisp
+  (with-eval-after-load 'org
+    (setq org-fontify-done-headline nil))
+#+END_SRC
+** TAB exits isearch and org-cycles
+#+BEGIN_SRC emacs-lisp
+  (defun my-isearch-org-cycle ()
+    (interactive)
+    (isearch-exit)
+    (org-cycle)
+    )
+  (bind-key "TAB" 'my-isearch-org-cycle isearch-mode-map)
+#+END_SRC
+** navigate to end of subtree pre subheadings
+#+BEGIN_SRC emacs-lisp
+  (defun end-of-heading-pre-sub-headings ()
+    (interactive)
+    (end-of-line)
+    (search-forward-regexp "^\\*+ \\|\\'")
+    (beginning-of-line)
+    (backward-char))
+  (bind-key "<f6> p" 'end-of-heading-pre-sub-headings org-mode-map)
+#+END_SRC
+** new subheading respect content (or don't: C-u)
+- would need another function for todos
+- this needs to be below [[*navigate to end of subtree pre subheadings][navigate to end of subtree pre subheadings]]
+#+BEGIN_SRC emacs-lisp
+  (defun new-subheading-respect-content ()
+    (interactive)
+    (cond
+     ((equal current-prefix-arg nil)
+      (push-mark (point))
+      (org-insert-heading-respect-content)
+      (org-do-demote)
+      (when (looking-at "\n\n") (delete-forward-char 1)))
+     ((equal current-prefix-arg '(4))
+      (end-of-heading-pre-sub-headings)
+      (org-insert-heading)
+      (org-do-demote)
+      )
+     )
+    )
+  (bind-key "C-M-<return>" 'new-subheading-respect-content org-mode-map)
+#+END_SRC
+** navigate to beginning of text be it a heading or a list item
+#+BEGIN_SRC emacs-lisp
+  (defun my-org-back-to-indentation ()
+    (interactive)
+    (setq current-line (org-current-line-string))
+    (setq is-heading (string-match "^\*+\s.*" current-line))
+    (setq is-list-item (string-match "^\s*?-\s.*" current-line))
+    (if (or is-heading is-list-item)
+        (progn
+          (beginning-of-line)
+          (forward-word)
+          (backward-word))
+      (back-to-indentation))
+    )
+  (bind-key "M-m" 'my-org-back-to-indentation org-mode-map)
+#+END_SRC
+** org paste subtree
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f7> e" 'org-paste-subtree org-mode-map)
+#+END_SRC
+* undo, redo, and undo-tree
+q 'undo-tree-visualizer-quit
+C-q 'undo-tree-visualizer-abort
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f5> 4"  'undo)
+  (use-package undo-tree
+    :straight t
+    :diminish
+    :config
+    (global-undo-tree-mode +1)
+    (bind-key "M-<f5> M-4" 'undo-tree-visualize)
+    (bind-key "C-<f5> C-4"  'undo-tree-redo))
+#+END_SRC
+* dired
+** do what I mean target
+#+BEGIN_SRC emacs-lisp
+(setq dired-dwim-target t)
+#+END_SRC
+** make file sizes make sense
+#+BEGIN_SRC emacs-lisp
+  (defvaralias 'dired-free-space-args 'directory-free-space-args)
+  (setq dired-free-space-args "-Pm")
+#+END_SRC
+** make copies recursive always
+#+BEGIN_SRC emacs-lisp
+(setq dired-recursive-copies 'always)
+#+END_SRC
+* (auto revert) reload files when changed externally
+** turn auto-revert-mode on everywhere
+#+BEGIN_SRC emacs-lisp
+  (global-auto-revert-mode)
+#+END_SRC
+** set auto-revert so that it's time based instead of system notification
+#+BEGIN_SRC emacs-lisp
+  (setq auto-revert-verbose nil)
+  (setq auto-revert-interval 1)
+#+END_SRC
+
+* system settings (prompts, interaction log)
+** prompts
+*** yes or no -> y or p
+#+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+*** kill processes without confirmation
+#+BEGIN_SRC emacs-lisp
+  (setq confirm-kill-processes nil)
+  (setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
+#+END_SRC
+** interaction log
+#+BEGIN_SRC emacs-lisp
+  (use-package interaction-log
+    :straight t
+    :config
+    (interaction-log-mode +1)
+    (bind-key "<f7> d"
+              (lambda ()
+                (interactive)
+                (display-buffer ilog-buffer-name))))
+#+END_SRC
+** safe local variables
+this takes care of an annoying (and outdated?) prompt
+#+BEGIN_SRC emacs-lisp
+(setq enable-local-variables :safe)
+#+END_SRC
+** clipboard
+#+BEGIN_SRC emacs-lisp
+  (setq save-interprogram-paste-before-kill t)
+#+END_SRC
+* selection
+** delete highlighted text
+#+BEGIN_SRC emacs-lisp
+  (delete-selection-mode 1)
+#+END_SRC
+** shift selection
+#+BEGIN_SRC emacs-lisp
+  (setq shift-select-mode t)
+#+END_SRC
+* navigation
+** scrolling
+*** vertical scroll step
+#+BEGIN_SRC emacs-lisp
+  (setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
+#+END_SRC
+*** disable notification about horizonal scrolling
+#+BEGIN_SRC emacs-lisp
+  (put 'scroll-left 'disabled nil)
+#+END_SRC
+*** preserve screen position
+#+BEGIN_SRC emacs-lisp
+  (setq scroll-preserve-screen-position 'always)
+#+END_SRC
+*** half page and one line scroll
+these are from view.el in master
+#+BEGIN_SRC emacs-lisp
+  (autoload 'View-scroll-half-page-forward "view")
+  (autoload 'View-scroll-half-page-backward "view")
+  (autoload 'View-scroll-line-forward "view")
+  (autoload 'View-scroll-line-backward "view")
+  (global-set-key (kbd "<f7> f") 'View-scroll-half-page-forward)
+  (global-set-key (kbd "<f7> g") 'View-scroll-half-page-backward)
+  (global-set-key (kbd "<f5> w") 'View-scroll-line-forward)
+  (global-set-key (kbd "<f5> v") 'View-scroll-line-backward)
+#+END_SRC
+** paragraph motion and shift selection
+#+BEGIN_SRC emacs-lisp
+  ;; custom functions because paragraph shift selection
+  ;; doesn't work the way I like out of the box
+  (defun my-backward-paragraph-with-shift-select ()
+    (interactive)
+    (setq this-command-keys-shift-translated t)
+    (call-interactively 'backward-paragraph))
+  (defun my-forward-paragraph-with-shift-select ()
+    (interactive)
+    (setq this-command-keys-shift-translated t)
+    (call-interactively 'forward-paragraph))
+
+  (bind-key "<f5> 3" 'forward-paragraph)
+  (bind-key "S-<f5> #" 'my-forward-paragraph-with-shift-select)
+  (bind-key "<f5> 2" 'backward-paragraph)
+  (bind-key "S-<f5> @" 'my-backward-paragraph-with-shift-select)
+#+END_SRC
+** mark ring 
+*** is mark at point
+#+BEGIN_SRC emacs-lisp
+(defun marker-is-point-p (marker)
+  "test if marker is current point"
+  (and (eq (marker-buffer marker) (current-buffer))
+       (= (marker-position marker) (point))))
+#+END_SRC
+*** local push mark maybe
+#+BEGIN_SRC emacs-lisp
+  (defun push-local-mark-maybe () 
+    "push mark onto `local-mark-ring' if mark head or tail is not current location"
+    (if (not mark-ring) (error "local-mark-ring empty")
+      (unless (or (marker-is-point-p (car mark-ring))
+                  (marker-is-point-p (car (reverse mark-ring))))
+        (push-mark)
+        (pop-to-mark-command))))
+#+END_SRC
+*** local back mark
+#+BEGIN_SRC emacs-lisp
+    (defun backward-local-mark()
+      "pop local mark, pushing current point if not on ring"
+      (interactive)
+      (push-local-mark-maybe)
+      (pop-to-mark-command))
+(bind-key "<f6> v" 'backward-local-mark)
+#+END_SRC
+
+*** local forward mark
+#+BEGIN_SRC emacs-lisp
+(defun unpop-to-mark-command ()
+  "Unpop off mark ring. Does nothing if mark ring is empty."
+  (interactive)
+  (push-local-mark-maybe)
+      (when mark-ring
+        (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
+        (set-marker (mark-marker) (car (last mark-ring)) (current-buffer))
+        (when (null (mark t)) (ding))
+        (setq mark-ring (nbutlast mark-ring))
+        (goto-char (marker-position (car (last mark-ring))))))
+(bind-key "<f5> z" 'unpop-to-mark-command)
+#+END_SRC
+*** global push mark maybe
+#+BEGIN_SRC emacs-lisp
+  (defun push-global-mark-maybe () 
+    "push mark onto `global-mark-ring' if mark head or tail is not current location"
+    (if (not global-mark-ring) (error "global-mark-ring empty")
+      (unless (or (marker-is-point-p (car global-mark-ring))
+                  (marker-is-point-p (car (reverse global-mark-ring))))
+        (push-mark))))
+#+END_SRC
+*** global back mark
+#+BEGIN_SRC emacs-lisp
+(defun backward-global-mark () 
+  "use `pop-global-mark', pushing current point if not on ring."
+  (interactive)
+  (push-global-mark-maybe)
+  (when (marker-is-point-p (car global-mark-ring))
+    (call-interactively 'pop-global-mark))
+  (call-interactively 'pop-global-mark))
+(bind-key "<f6> u" 'backward-global-mark)
+#+END_SRC
+*** global forward mark
+#+BEGIN_SRC emacs-lisp
+(defun forward-global-mark ()
+  "hack `pop-global-mark' to go in reverse, pushing current point if not on ring."
+  (interactive)
+  (push-global-mark-maybe)
+  (setq global-mark-ring (nreverse global-mark-ring))
+  (when (marker-is-point-p (car global-mark-ring))
+    (call-interactively 'pop-global-mark))
+  (call-interactively 'pop-global-mark)
+  (setq global-mark-ring (nreverse global-mark-ring)))
+(bind-key "<f6> f" 'forward-global-mark)
+#+END_SRC
+** visible mark
+my repo coming from:  https://git.sr.ht/~iank/visible-mark
+which is the new location originally moved from: https://gitlab.com/iankelling/visible-mark
+#+BEGIN_SRC emacs-lisp
+  (straight-use-package '(visible-mark :type git :host github :repo "nathanvercaemert/visible-mark"))
+  (defface visible-mark-active
+    '((((type tty) (class mono)))
+      (t (:background "magenta"))) "")
+  (defface visible-mark-face1
+    '((((type tty) (class mono)))
+      (t (:background "light salmon" :foreground "black")))  
+    "Example face which can be customized and added to subsequent face lists."
+    :group 'visible-mark)
+  (defface visible-mark-face2
+    '((((type tty) (class mono)))
+      (t (:background "light goldenrod" :foreground "black")))
+    "Example face which can be customized and added to subsequent face lists."
+    :group 'visible-mark)
+  (setq visible-mark-max 2)
+  (setq visible-mark-faces `(visible-mark-face1 visible-mark-face2))
+  (require 'visible-mark)
+  (global-visible-mark-mode 1)
+#+END_SRC
+** sentences have one space after period
+#+BEGIN_SRC emacs-lisp
+(setq sentence-end-double-space nil)
+#+END_SRC
+
+* text editing
+** duplicate line or region
+taken from tuxicity
+https://rejeep.github.io/emacs/elisp/2010/03/11/duplicate-current-line-or-region-in-emacs.html
+note that M-NumDuplicate or C-u NumDuplicate is the way to prefix multiple
+#+BEGIN_SRC emacs-lisp
+  (defun duplicate-current-line-or-region (arg)
+    "Duplicates the current line or region ARG times.
+  If there's no region, the current line will be duplicated. However, if
+  there's a region, all lines that region covers will be duplicated."
+    (interactive "p")
+    (let (beg end (origin (point)))
+      (if (and mark-active (> (point) (mark)))
+          (exchange-point-and-mark))
+      (setq beg (line-beginning-position))
+      (if mark-active
+          (exchange-point-and-mark))
+      (setq end (line-end-position))
+      (let ((region (buffer-substring-no-properties beg end)))
+        (dotimes (i arg)
+          (goto-char end)
+          (newline)
+          (insert region)
+          (setq end (point)))
+        (goto-char (+ origin (* (length region) arg) arg)))))
+  (bind-key "<f6> 7" 'duplicate-current-line-or-region)
+#+END_SRC
+** indentation
+*** spaces no tabs
+#+BEGIN_SRC emacs-lisp
+  (setq-default indent-tabs-mode nil)
+#+END_SRC
+*** 4 spaces
+#+BEGIN_SRC emacs-lisp
+  (setq tab-width 4)
+  (setq-default tab-width 4)
+  (setq indent-line-function 'insert-tab)
+  (setq-default c-basic-offset 4)
+  (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80))
+#+END_SRC
+** drag stuff
+#+BEGIN_SRC emacs-lisp
+  (use-package drag-stuff
+    :straight t
+    :bind
+    ("<f6> x" . 'drag-stuff-up)
+    ("<f6> y" . 'drag-stuff-down))
+#+END_SRC
+** my-delete-all-lines-in-region
+different than the built-in in that it deletes the newline before the killed line instead of after
+- also I think you have to click built-in twice
+#+BEGIN_SRC emacs-lisp
+  (defun my-kill-or-copy-all-lines-in-region (kill)
+    (interactive)
+    (let (char-at vis-ln-md-is-swap tr-wh-is-swap trunc-is-swap end (origin (point)))
+      (setq char-at (current-column))
+      (if (not truncate-lines)
+          (progn
+            (if visual-line-mode
+                (setq vis-ln-md-is-swap t))
+            (toggle-truncate-lines)
+            (setq trunc-is-swap t)))
+      (if (not show-trailing-whitespace)
+          (progn
+            (setq show-trailing-whitespace t)
+            (setq tr-wh-is-swap t)))
+      (if mark-active
+          (if (< (point) (mark))
+              (exchange-point-and-mark)))
+      (setq end (line-end-position))
+      (if mark-active
+          (exchange-point-and-mark))
+      (move-beginning-of-line nil)
+      (kill-new "\n" t)
+      (append-next-kill)
+      (if kill
+          (progn
+            (kill-region (point) end)
+            (if (< 1 (line-number-at-pos (point)))
+                (delete-char -1)
+              (if (not (eobp))
+                  (delete-char 1))))
+        (copy-region-as-kill (point) end))
+      (if tr-wh-is-swap
+          (setq show-trailing-whitespace nil))
+      (if trunc-is-swap
+          (progn
+            (toggle-truncate-lines)
+            (if vis-ln-md-is-swap
+                (visual-line-mode))))
+      (next-line)
+      (move-to-column char-at)))
+
+  (defun my-kill-all-lines-in-region ()
+    (interactive)
+    (my-kill-or-copy-all-lines-in-region t))
+
+  (defun my-copy-all-lines-in-region ()
+    (interactive)
+    (my-kill-or-copy-all-lines-in-region nil))
+
+  (defun my-paste-line ()
+    (interactive)
+    (move-end-of-line nil)
+    (insert (car kill-ring-yank-pointer))
+    )
+
+  (bind-key "<f6> 4" 'my-kill-all-lines-in-region)
+  (bind-key "<f6> 5" 'my-paste-line)
+  (bind-key "<f6> 6" 'my-copy-all-lines-in-region)
+#+END_SRC
+*** test my-delete-all-lines-in-region
+#+NAME: test-my-kill-or-copy-all-lines-in-region
+#+BEGIN_SRC emacs-lisp :tangle no
+  (ert-deftest delete-single-line-with-active-region ()
+    (with-temp-buffer
+      (insert "t1\nt4t5\nt2")
+      (beginning-of-buffer)
+      (forward-line)
+      (forward-char)
+      (push-mark (point) nil t)
+      (forward-char)
+      (forward-char)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\nt2"))))
+
+  (ert-deftest delete-2-4-with-empty-1-5 ()
+    (with-temp-buffer
+      (insert "\n\n\n\n")
+      (beginning-of-buffer)
+      (forward-line)
+      (push-mark (point) nil t)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3\n"))))
+
+  (ert-deftest delete-2-4-with-empty-2 ()
+    (with-temp-buffer
+      (insert "t1\n\nt5\nt4\nt2")
+      (beginning-of-buffer)
+      (forward-line)
+      (push-mark (point) nil t)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\nt2"))))
+
+  (ert-deftest delete-2-4-with-empty-4 ()
+    (with-temp-buffer
+      (insert "t1\nt4\nt5\n\nt2")
+      (beginning-of-buffer)
+      (forward-line)
+      (push-mark (point) nil t)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\nt2"))))
+
+  (ert-deftest delete-2-4-with-empty-3 ()
+    (with-temp-buffer
+      (insert "t1\nt4\n\nt5\nt2")
+      (beginning-of-buffer)
+      (forward-line)
+      (push-mark (point) nil t)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\nt2"))))
+
+  (ert-deftest delete-3-with-empty-2-4 ()
+    (with-temp-buffer
+      (insert "t1\n\nt4\nt2")
+      (beginning-of-buffer)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\n\nt2"))))
+
+  (ert-deftest delete-empty-3-with-empty-2-4 ()
+    (with-temp-buffer
+      (insert "t1\n\n\nt2")
+      (beginning-of-buffer)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\n\nt2"))))
+
+  (ert-deftest delete-last-with-empty-previous ()
+    (with-temp-buffer
+      (insert "t1\n\nt2")
+      (end-of-buffer)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t1\n"))))
+
+  (ert-deftest delete-1-with-text-2 ()
+    (with-temp-buffer
+      (insert "t1\nt2")
+      (beginning-of-buffer)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3t2"))))
+
+  (ert-deftest delete-1-with-empty-2 ()
+    (with-temp-buffer
+      (insert "t1\n")
+      (beginning-of-buffer)
+      (my-delete-all-lines-in-region)
+      (kill-new "t3" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t3"))))
+
+  (ert-deftest delete-empty-2 ()
+    (with-temp-buffer
+      (insert "t1\n\nt3")
+      (beginning-of-buffer)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t4" t)
+      (kill-region (point-min) (point-max))
+      (should (string= (car kill-ring) "t4t1\nt3"))))
+
+  (ert-deftest delete-empty-3-with-empty-2 ()
+    (with-temp-buffer
+      (insert "t1\n\n\nt3")
+      (beginning-of-buffer)
+      (forward-line)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t4" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t4t1\n\nt3"))))
+
+  (ert-deftest delete-empty-2-with-empty-3 ()
+    (with-temp-buffer
+      (insert "t1\n\n\nt3")
+      (beginning-of-buffer)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t4" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t4t1\n\nt3"))))
+
+  (ert-deftest delete-2 ()
+    (with-temp-buffer
+      (insert "t1\nt2\nt3")
+      (beginning-of-buffer)
+      (forward-line)
+      (my-delete-all-lines-in-region)
+      (kill-new "t4" t)
+      (mark-whole-buffer)
+      (append-next-kill)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t4t1\nt3"))))
+
+  (ert-deftest delete-empty-1-with-text-2 ()
+    (find-file "test1.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "\nt1")
+    (beginning-of-buffer)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3t1")))
+
+  (ert-deftest delete-empty-1-with-empty-2 ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "\n\n")
+    (beginning-of-buffer)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3\n")))
+
+  (ert-deftest delete-only-1-3-with-empty-1-3 ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "\nt1\n")
+    (beginning-of-buffer)
+    (push-mark (point) nil t)
+    (forward-line)
+    (forward-line)
+    (my-delete-all-lines-in-region)
+    (setq test (car kill-ring))
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) test)))
+
+  (ert-deftest delete-2-4-with-empty-2-4 ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "t2\n\nt4\n\nt1")
+    (beginning-of-buffer)
+    (forward-line)
+    (push-mark (point) t t)
+    (forward-line)
+    (forward-line)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3t2\nt1")))
+
+  (ert-deftest delete-2-4-with-empty-2-4-reverse ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "t2\n\nt4\n\nt1")
+    (beginning-of-buffer)
+    (forward-line)
+    (forward-line)
+    (forward-line)
+    (push-mark (point) t t)
+    (previous-line)
+    (previous-line)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3t2\nt1")))
+
+  (ert-deftest delete-2-4 ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "t2\nt5\nt4\nt6\nt1")
+    (beginning-of-buffer)
+    (forward-line)
+    (push-mark (point) t t)
+    (forward-line)
+    (forward-line)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3t2\nt1")))
+
+  (ert-deftest delete-2-4-reverse ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "t2\nt5\nt4\nt6\nt1")
+    (beginning-of-buffer)
+    (forward-line)
+    (forward-line)
+    (forward-line)
+    (push-mark (point) t t)
+    (previous-line)
+    (previous-line)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3t2\nt1")))
+
+  (ert-deftest delete-empty-last-with-text-previous ()
+    (find-file "test.txt")
+    (mark-whole-buffer)
+    (kill-region (point) (mark))
+    (insert "t1\n\n")
+    (beginning-of-buffer)
+    (forward-line)
+    (forward-line)
+    (push-mark (point) t t)
+    (my-delete-all-lines-in-region)
+    (kill-new "t3" t)
+    (mark-whole-buffer)
+    (append-next-kill)
+    (kill-region (point) (mark))
+    (set-buffer-modified-p nil)
+    (kill-this-buffer)
+    (should (string= (car kill-ring) "t3t1\n")))
+
+                                          ; add a test for kill a region or line and then adding another immediately (it should prepend)
+  (ert-deftest kill-1-2 ()
+    (with-temp-buffer
+      ;; (with-current-buffer (get-buffer-create "debug-buffer")
+      ;;   (view-buffer-other-window (current-buffer))
+      (insert "t1\nt2\nt3\nt4")
+      (beginning-of-buffer)
+      (push-mark (point) nil t)
+      (forward-line)
+      (my-kill-or-copy-all-lines-in-region)
+      (with-temp-buffer
+        (insert (car kill-ring))
+        (kill-new "t5" t)
+        (kill-region (point-min) (point-max)))
+      (should (string= (car kill-ring) "t5\nt1\nt2"))))
+
+  (ert-deftest kill-2-3-with-empty-1 ()
+    (with-temp-buffer
+      (insert "\nt2\nt3\nt4")
+      (beginning-of-buffer)
+      (forward-line)
+      (push-mark (point) nil t)
+      (forward-line)
+      (my-kill-or-copy-all-lines-in-region)
+      (kill-new "t5" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t5\nt4"))))
+
+  (ert-deftest kill-2-3-with-empty-1-2 ()
+    (with-temp-buffer
+      (insert "\n\nt3\nt4")
+      (beginning-of-buffer)
+      (forward-line)
+      (push-mark (point) nil t)
+      (forward-line)
+      (my-kill-or-copy-all-lines-in-region)
+      (kill-new "t5" t)
+      (append-next-kill)
+      (mark-whole-buffer)
+      (kill-region (point) (mark))
+      (should (string= (car kill-ring) "t5\nt4"))))
+#+END_SRC
+*** testplan
+**** kill-line
+**** copy-line
+**** kill-2-4
+**** kill-2-4-reverse
+**** copy-2-4
+**** copy-2-4-reverse
+**** killing a few lines one at a time can then be yanked correctly
+** commenting
+found this on stack overflow
+name based on functionality being like eclipse
+#+BEGIN_SRC emacs-lisp
+  (defun comment-eclipse ()
+    (interactive)
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
+      (when (or (not transient-mark-mode) (region-active-p))
+        (setq start (save-excursion
+                      (goto-char (region-beginning))
+                      (beginning-of-line)
+                      (point))
+              end (save-excursion
+                    (goto-char (region-end))
+                    (end-of-line)
+                    (point))))
+      (comment-or-uncomment-region start end)))
+  (bind-key (kbd "<f7> a") 'comment-eclipse)
+#+END_SRC
+** multiple cursors
+*** straight
+#+BEGIN_SRC emacs-lisp
+#+END_SRC
+*** lists of commands to run once/for all
+this needs to be run before requiring multiple cursors
+#+BEGIN_SRC emacs-lisp
+  (setq mc/list-file "~/.emacs.d/.mc-lists.el")
+#+END_SRC
+*** setup
+#+BEGIN_SRC emacs-lisp
+  (use-package multiple-cursors
+    :straight t)
+#+END_SRC
+*** hotkeys
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f6> k" 'mc/mark-next-like-this)
+  (bind-key "<f6> l" 'mc/mark-previous-like-this)
+  (bind-key "<f6> m" 'mc/mark-all-like-this)
+  (bind-key "<f6> n" 'mc/unmark-next-like-this)
+  (bind-key "<f6> o" 'mc/unmark-previous-like-this)
+  (bind-key "<mouse-8>" 'mc/add-cursor-on-click) ;; qmk btn4 reads as 8
+#+END_SRC
+*** phi-search
+#+BEGIN_SRC emacs-lisp
+  (use-package phi-search
+    :straight t)
+#+END_SRC
+** expand region
+#+BEGIN_SRC emacs-lisp
+  (use-package expand-region
+    :straight t
+    :defer 3
+    :config
+    (defun my-mark-symbol ()
+      (interactive)
+      (push-mark)
+      (er/mark-symbol))
+    (defun my-mark-word ()
+      (interactive)
+      (push-mark)
+      (er/mark-word))
+    (defun my-mark-inside-quotes ()
+      (interactive)
+      (push-mark)
+      (er/mark-inside-quotes))
+    (defun my-mark-outside-quotes ()
+      (interactive)
+      (push-mark)
+      (er/mark-outside-quotes))
+    (defun my-mark-outside-pairs ()
+      (interactive)
+      (push-mark)
+      (er/mark-outside-pairs))
+    (defun my-mark-inside-pairs ()
+      (interactive)
+      (push-mark)
+      (er/mark-inside-pairs))
+    (defun my-mark-comment ()
+      (interactive)
+      (push-mark)
+      (er/mark-comment))
+    (defun my-mark-next-accessor ()
+      (interactive)
+      (push-mark)
+      (er/mark-next-accessor))
+    (defun my-mark-method-call ()
+      (interactive)
+      (push-mark)
+      (er/mark-method-call))
+    (bind-key "<f5> t" 'my-mark-symbol)
+    (bind-key "<f5> u" 'my-mark-word)
+    (bind-key "<f5> y" 'my-mark-inside-quotes)
+    (bind-key "<f5> x" 'my-mark-outside-quotes)
+    (bind-key "<f5> 5" 'my-mark-outside-pairs)
+    (bind-key "<f5> 6" 'my-mark-inside-pairs)
+    (bind-key "<f6> 2" 'my-mark-comment)
+    (bind-key "<f6> 1" 'my-mark-next-accessor)
+    (bind-key "<f6> 3" 'my-mark-method-call)
+    )
+#+END_SRC
+** electric pair mode
+- test 
+#+BEGIN_SRC emacs-lisp
+  (electric-pair-mode)
+
+  ;; inhibit double and single quotes (because there is a bug with double quotes in org mode)
+  ;; bug: if you type (no quotes here, just literal typing) "test", then "test"" appears
+  ;; this extra " causes problems
+  (setq electric-pair-inhibit-predicate
+        (lambda (c)
+          (if (or (char-equal c ?\') (char-equal c ?\")) t (electric-pair-default-inhibit c))))
+#+END_SRC
+** shift by indentation
+#+BEGIN_SRC emacs-lisp
+  (defun my-indent-shift-left ()
+    (interactive
+     (progn
+       (if mark-active
+           (if (> (point) (mark))
+               (exchange-point-and-mark)))
+       (let ((deactivate-mark nil))
+         (if mark-active
+             (indent-rigidly (line-beginning-position) (region-end) (- 4))
+           (indent-rigidly (line-beginning-position) (line-end-position) (- 4)))))
+     )
+    )
+
+  (defun my-indent-shift-right ()
+    (interactive
+     (progn
+       (if mark-active
+           (if (> (point) (mark))
+               (exchange-point-and-mark)))
+       (let ((deactivate-mark nil))
+         (if mark-active
+             (indent-rigidly (line-beginning-position) (region-end) 4)
+           (indent-rigidly (line-beginning-position) (line-end-position) 4))))
+     )
+    )
+
+  (bind-key "<f5> n" 'my-indent-shift-right)
+  (bind-key "<f5> o" 'my-indent-shift-left)
+#+END_SRC
+** kill word
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f7> b" 'kill-word)
+#+END_SRC
+* bookmarks
+** only list the names of bookmarks
+#+BEGIN_SRC emacs-lisp
+  (setq bookmark-bmenu-toggle-filenames nil)
+#+END_SRC
+
+** save bookmarks with every bookmark action
+#+BEGIN_SRC emacs-lisp
+(setq bookmark-save-flag 1)
+#+END_SRC
+* shell
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f6> d" 'shell)
+  (defun create-named-shell ()
+    "creates a shell with a given name"
+    (interactive);; "Prompt\n shell name:")
+    (let ((shell-name (read-string "shell name: " nil)))
+    (shell (concat "*" shell-name "*"))))
+  (bind-key "<f6> g" 'create-named-shell)
+#+END_SRC
+* appearances
+** no scratch buffer description
+#+BEGIN_SRC emacs-lisp
+  (setq initial-scratch-message nil)
+#+END_SRC
+** toggle linum mode
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f8> a d" 'linum-mode)
+#+END_SRC
+** toggle truncate lines
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f8> a e" 'toggle-truncate-lines)
+#+END_SRC
+** visual line mode (word wrapping)
+#+BEGIN_SRC emacs-lisp
+(add-hook 'text-mode-hook #'visual-line-mode)
+#+END_SRC
+** default to not truncating lines in minibuffer
+#+BEGIN_SRC emacs-lisp
+(add-hook 'minibuffer-setup-hook
+      (lambda () (setq truncate-lines nil)))
+#+END_SRC
+** rainbow mode
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-mode
+    :straight t
+    :hook (prog-mode . rainbow-mode))
+#+END_SRC
+* completion
+** ivy
+#+BEGIN_SRC emacs-lisp
+  (use-package ivy
+    :straight t
+    :demand t
+    :config
+    (setq ivy-re-builders-alist
+          '((t . ivy--regex-fuzzy)))
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-count-format "(%d/%d) ")
+    (setq ivy-height 15)
+    (setq ivy-display-style 'fancy)
+    (ivy-mode)
+    :bind
+    (("<f5> s" . counsel-imenu)
+     ("<f7> c" . counsel-M-x)
+     ("<f6> 9" . counsel-find-file)))
+#+END_SRC
+** company
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :straight t
+    :defer t
+    :hook
+    (prog-mode . company-mode)
+    (text-mode . company-mode)
+    :bind
+    (:map company-active-map
+          ("<tab>" . company-complete-common))
+    :custom
+    (company-require-match nil)
+    (company-idle-delay 0)
+    :config
+    (defun my-company-prog-hook ()
+      (setq-local company-backends '((company-dabbrev-code company-files))))
+    (defun my-company-text-hook ()
+      (setq-local company-backends '((company-files))))
+    (add-hook 'prog-mode-hook #'my-company-prog-hook)
+    (add-hook 'text-mode-hook #'my-company-text-hook)
+    )
+
+#+END_SRC
+** flx
+#+BEGIN_SRC emacs-lisp
+  (use-package flx
+    :straight t)
+#+END_SRC
 * yasnippet
 #+BEGIN_SRC emacs-lisp
-  (straight-use-package 'yasnippet)
   (use-package yasnippet
     :straight t
     :config
     (yas-global-mode 1)
+    (define-key yas-minor-mode-map [(tab)] nil)
+    (define-key yas-minor-mode-map (kbd "TAB") nil)
     :bind
-    (("<f6> s" . yas-expand))
-    )
+    (("<f6> s" . yas-expand)))
 #+END_SRC
