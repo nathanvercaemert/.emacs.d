@@ -21,3 +21,10 @@
 ** Windows
 - Download the latest msys bundle
   - https://msys.qmk.fm/
+- set defaults
+  - qmk config user.keyboard=ergodox_ez
+  - qmk config user.keymap=nathanvercaemert
+- setup msys qmk bundle
+  - pacman -Syu (this may not be necessary, and will require terminal restart)
+  - navigate to fresh clone of fork
+  - qmk setup
