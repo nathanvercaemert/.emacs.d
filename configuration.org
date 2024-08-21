@@ -34,8 +34,8 @@
     (split-window-right)
     (other-window 1)
     (balance-windows))
-  (bind-key "<f8> a a" 'my-split-window-vertical)
-  (bind-key "<f8> a b" 'my-split-window-horizontal)
+  (bind-key "<f19> b i" 'my-split-window-vertical)
+  (bind-key "<f19> b j" 'my-split-window-horizontal)
 #+END_SRC
 ** kill window
 #+BEGIN_SRC emacs-lisp
@@ -43,7 +43,7 @@
     (interactive)
     (delete-window)
     (balance-windows))
-  (bind-key "<f8> a c" 'my-kill-window)
+  (bind-key "<f19> b k" 'my-kill-window)
 #+END_SRC
 ** kill this buffer
 #+BEGIN_SRC emacs-lisp
@@ -53,14 +53,14 @@
     (if (member (buffer-name (current-buffer)) my-do-not-kill-buffer-list)
         (bury-buffer)
       (kill-buffer (current-buffer))))
-  (bind-key "<f8> a f" 'my-kill-buffer-but-not-some)
+  (bind-key "<f19> b m" 'my-kill-buffer-but-not-some)
 #+END_SRC
 ** windmove
 #+BEGIN_SRC emacs-lisp
-  (bind-key "<f5> k" 'windmove-right)
-  (bind-key "<f5> h" 'windmove-up)
-  (bind-key "<f5> i" 'windmove-left)
-  (bind-key "<f5> l" 'windmove-down)
+  (bind-key "<f19> b p" 'windmove-up)
+  (bind-key "<f19> b q" 'windmove-right)
+  (bind-key "<f19> b r" 'windmove-left)
+  (bind-key "<f19> b s" 'windmove-down)
 #+END_SRC
 ** my delete other windows
 - I think this forces the "make this the only window" functionality that I want.
@@ -73,29 +73,20 @@
     (delete-other-windows)
     (setq ignore-window-parameters temp)
     )
-  (bind-key "<f5> m" 'my-delete-other-windows)
+  (bind-key "<f19> b l" 'my-delete-other-windows)
+#+END_SRC
+** kill frame
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> b n" 'delete-frame)
 #+END_SRC
 * programming
-** emacs-lisp
+** emacs-lisp aggressive indent
 #+BEGIN_SRC emacs-lisp
   (use-package aggressive-indent
     :straight t
     :diminish
     :hook
     (emacs-lisp-mode . aggressive-indent-mode))
-#+END_SRC
-** python
-*** org python
-#+BEGIN_SRC emacs-lisp
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((python . t)))
-  (setq org-babel-python-command "python3")
-#+END_SRC
-*** make sexp normal in python mode
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'python-mode-hook
-            (lambda () (setq forward-sexp-function nil)))
 #+END_SRC
 ** rainbow delimiters
 #+BEGIN_SRC emacs-lisp
@@ -143,8 +134,8 @@
            (indent-rigidly (line-beginning-position) (line-end-position) 4))))
      )
     )
-  (bind-key "<f5> n" 'my-indent-shift-right)
-  (bind-key "<f5> o" 'my-indent-shift-left)
+  (bind-key "<f19> b t" 'my-indent-shift-right)
+  (bind-key "<f19> b u" 'my-indent-shift-left)
 #+END_SRC
 ** c
 #+BEGIN_SRC emacs-lisp
@@ -173,10 +164,6 @@
   (setq org-blank-before-new-entry (quote ((heading . nil)
                                            (plain-list-item . nil))))
 #+END_SRC
-** allow me to set the display of inline images to certain size
-#+BEGIN_SRC emacs-lisp
-  (setq org-image-actual-width nil)
-#+END_SRC
 ** start with all headings collapsed
 #+BEGIN_SRC emacs-lisp
   (setq org-startup-folded t)
@@ -185,11 +172,6 @@
 #+BEGIN_SRC emacs-lisp
   (setq org-startup-indented t)
 #+END_SRC
-** move up one heading same level
-- this was a result of docker not processing C-p correctly
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f5> 9" 'org-previous-visible-heading org-mode-map)
-#+END_SRC
 ** C-TAB collapses heading
 #+BEGIN_SRC emacs-lisp
   (bind-key "C-<tab>" 'outline-hide-subtree org-mode-map)
@@ -197,18 +179,6 @@
 ** don't search through collapsed headings
 #+BEGIN_SRC emacs-lisp
   (setq search-invisible nil)
-#+END_SRC
-** toggle link display
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f6> h" 'org-toggle-link-display)
-#+END_SRC
-** org follow link
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f6> t" 'org-open-at-point)
-#+END_SRC
-** don't prompt for code evaluation
-#+BEGIN_SRC emacs-lisp
-  (setq org-confirm-babel-evaluate nil)
 #+END_SRC
 ** todo headlines font fix
 #+BEGIN_SRC emacs-lisp
@@ -223,16 +193,6 @@
     (org-cycle)
     )
   (bind-key "TAB" 'my-isearch-org-cycle isearch-mode-map)
-#+END_SRC
-** navigate to end of subtree pre subheadings
-#+BEGIN_SRC emacs-lisp
-  (defun end-of-heading-pre-sub-headings ()
-    (interactive)
-    (end-of-line)
-    (search-forward-regexp "^\\*+ \\|\\'")
-    (beginning-of-line)
-    (backward-char))
-  (bind-key "<f6> p" 'end-of-heading-pre-sub-headings org-mode-map)
 #+END_SRC
 ** new subheading respect content (or don't: C-u)
 - would need another function for todos
@@ -255,7 +215,34 @@
     )
   (bind-key "C-M-<return>" 'new-subheading-respect-content org-mode-map)
 #+END_SRC
-** navigate to beginning of text be it a heading or a list item
+** editing
+*** cut subtree
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a d" 'org-cut-special)
+#+END_SRC
+*** paste subtree
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a e" 'org-paste-subtree)
+#+END_SRC
+*** mark subtree
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a c" 'org-mark-subtree)
+#+END_SRC
+*** toggle code buffer
+#+BEGIN_SRC emacs-lisp
+  (defun my-org-toggle-code-buffer ()
+    "Toggle between Org buffer and code buffer."
+    (interactive)
+    (if (derived-mode-p 'org-mode)
+        (org-edit-special)
+      (if (org-src-edit-buffer-p)
+          (org-edit-src-exit)
+        (message "Not in an Org buffer.")))
+    )
+  (bind-key "<f19> a i" 'my-org-toggle-code-buffer)
+#+END_SRC
+** navigation
+*** beginning of text be it a heading or a list item
 #+BEGIN_SRC emacs-lisp
   (defun my-org-back-to-indentation ()
     (interactive)
@@ -271,23 +258,47 @@
     )
   (bind-key "M-m" 'my-org-back-to-indentation org-mode-map)
 #+END_SRC
-** org paste subtree
+*** next heading same level
 #+BEGIN_SRC emacs-lisp
-  (bind-key "<f7> e" 'org-paste-subtree org-mode-map)
+  (bind-key "<f19> a g" 'org-forward-heading-same-level)
+#+END_SRC
+*** previous heading same level
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a f" 'org-backward-heading-same-level)
+#+END_SRC
+*** end of subtree pre subheadings
+#+BEGIN_SRC emacs-lisp
+  (defun end-of-heading-pre-sub-headings ()
+    (interactive)
+    (end-of-line)
+    (search-forward-regexp "^\\*+ \\|\\'")
+    (beginning-of-line)
+    (backward-char))
+  (bind-key "<f19> a h" 'end-of-heading-pre-sub-headings)
+#+END_SRC
+*** next visible heading
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a a" 'org-next-visible-heading)
+#+END_SRC
+*** previous visible heading
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a b" 'org-previous-visible-heading)
+#+END_SRC
+*** up heading
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a p" 'outline-up-heading)
 #+END_SRC
 * undo, redo, and undo-tree
-q 'undo-tree-visualizer-quit
-C-q 'undo-tree-visualizer-abort
 #+BEGIN_SRC emacs-lisp
-  (bind-key "<f5> 4"  'undo)
+  (bind-key "<f19> c c"  'undo)
   (use-package undo-tree
     :straight t
     :diminish
     :config
     (global-undo-tree-mode +1)
     :bind
-    (("M-<f5> M-4" . undo-tree-visualize)
-     ("M-<f5> C-4" . undo-tree-redo)))
+    (("M-<f19> M-c M-c" . undo-tree-visualize)
+     ("C-<f19> C-c C-c" . undo-tree-redo)))
 #+END_SRC
 * dired
 ** do what I mean target
@@ -313,7 +324,7 @@ C-q 'undo-tree-visualizer-abort
   (setq auto-revert-verbose nil)
   (setq auto-revert-interval 1)
 #+END_SRC
-* system settings (prompts, interaction log, etc.)
+* system settings (prompts, interaction log, clipboard, etc.)
 ** prompts
 *** yes or no -> y or p
 #+BEGIN_SRC emacs-lisp
@@ -365,10 +376,10 @@ C-q 'undo-tree-visualizer-abort
   (autoload 'View-scroll-half-page-backward "view")
   (autoload 'View-scroll-line-forward "view")
   (autoload 'View-scroll-line-backward "view")
-  (bind-key "<f7> f" 'View-scroll-half-page-forward)
-  (bind-key "<f7> g" 'View-scroll-half-page-backward)
-  (bind-key "<f5> w" 'View-scroll-line-forward)
-  (bind-key "<f5> v" 'View-scroll-line-backward)
+  (bind-key "<f19> b x" 'View-scroll-line-forward)
+  (bind-key "<f19> b y" 'View-scroll-line-backward)
+  (bind-key "<f19> b v" 'View-scroll-half-page-forward)
+  (bind-key "<f19> b w" 'View-scroll-half-page-backward)
 #+END_SRC
 ** paragraph motion and shift selection
 - custom functions because paragraph shift selection doesn't work the way I like out of the box
@@ -381,10 +392,10 @@ C-q 'undo-tree-visualizer-abort
     (interactive)
     (setq this-command-keys-shift-translated t)
     (call-interactively 'forward-paragraph))
-  (bind-key "<f5> 3" 'forward-paragraph)
-  (bind-key "S-<f5> #" 'my-forward-paragraph-with-shift-select)
-  (bind-key "<f5> 2" 'backward-paragraph)
-  (bind-key "S-<f5> @" 'my-backward-paragraph-with-shift-select)
+  (bind-key "<f19> b z" 'forward-paragraph)
+  (bind-key "S-<f19> B Z" 'my-forward-paragraph-with-shift-select)
+  (bind-key "<f19> c a" 'backward-paragraph)
+  (bind-key "S-<f19> C A" 'my-backward-paragraph-with-shift-select)
 #+END_SRC
 ** mark ring
 #+BEGIN_SRC emacs-lisp
@@ -414,32 +425,8 @@ C-q 'undo-tree-visualizer-abort
       (when (null (mark t)) (ding))
       (setq mark-ring (nbutlast mark-ring))
       (goto-char (marker-position (car (last mark-ring))))))
-  (defun push-global-mark-maybe () 
-    "push mark onto `global-mark-ring' if mark head or tail is not current location"
-    (if (not global-mark-ring) (error "global-mark-ring empty")
-      (unless (or (marker-is-point-p (car global-mark-ring))
-                  (marker-is-point-p (car (reverse global-mark-ring))))
-        (push-mark))))
-  (defun backward-global-mark () 
-    "use `pop-global-mark', pushing current point if not on ring."
-    (interactive)
-    (push-global-mark-maybe)
-    (when (marker-is-point-p (car global-mark-ring))
-      (call-interactively 'pop-global-mark))
-    (call-interactively 'pop-global-mark))
-  (defun forward-global-mark ()
-    "hack `pop-global-mark' to go in reverse, pushing current point if not on ring."
-    (interactive)
-    (push-global-mark-maybe)
-    (setq global-mark-ring (nreverse global-mark-ring))
-    (when (marker-is-point-p (car global-mark-ring))
-      (call-interactively 'pop-global-mark))
-    (call-interactively 'pop-global-mark)
-    (setq global-mark-ring (nreverse global-mark-ring)))
-  (bind-key "<f6> v" 'backward-local-mark)
-  (bind-key "<f5> z" 'unpop-to-mark-command)
-  (bind-key "<f6> u" 'backward-global-mark)
-  (bind-key "<f6> f" 'forward-global-mark)
+  (bind-key "<f19> a q" 'backward-local-mark)
+  (bind-key "<f19> a r" 'unpop-to-mark-command)
 #+END_SRC
 ** visible mark
 - my repo coming from:  https://git.sr.ht/~iank/visible-mark
@@ -464,6 +451,15 @@ C-q 'undo-tree-visualizer-abort
   (require 'visible-mark)
   (global-visible-mark-mode 1)
 #+END_SRC
+** register jump
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a l" 'point-to-register)
+  (bind-key "<f19> a m" 'jump-to-register)
+#+END_SRC
+** switch buffer
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> b h" 'ivy-switch-buffer)
+#+END_SRC
 * bookmarks
 ** only list the names of bookmarks
 #+BEGIN_SRC emacs-lisp
@@ -475,26 +471,22 @@ C-q 'undo-tree-visualizer-abort
 #+END_SRC
 * shell
 #+BEGIN_SRC emacs-lisp
-  (bind-key "<f6> d" 'shell)
-  (defun create-named-shell ()
+  (bind-key "<f19> a s" 'shell)
+  (defun my-create-named-shell ()
     "creates a shell with a given name"
     (interactive);; "Prompt\n shell name:")
     (let ((shell-name (read-string "shell name: " nil)))
       (shell (concat "*" shell-name "*"))))
-  (bind-key "<f6> g" 'create-named-shell)
+  (bind-key "<f19> a t" 'my-create-named-shell)
 #+END_SRC
 * appearances
 ** no scratch buffer description
 #+BEGIN_SRC emacs-lisp
   (setq initial-scratch-message nil)
 #+END_SRC
-** toggle linum mode
-#+BEGIN_SRC emacs-lisp
-  (bind-key "<f8> a d" 'linum-mode)
-#+END_SRC
 ** toggle truncate lines
 #+BEGIN_SRC emacs-lisp
-  (bind-key "<f8> a e" 'toggle-truncate-lines)
+  (bind-key "<f19> c b" 'toggle-truncate-lines)
 #+END_SRC
 ** visual line mode (word wrapping)
 #+BEGIN_SRC emacs-lisp
@@ -540,8 +532,8 @@ C-q 'undo-tree-visualizer-abort
     (prog-mode . company-mode)
     (text-mode . company-mode)
     :bind
-    (:map company-active-map
-          ("<tab>" . company-complete-common))
+    ((:map company-active-map
+          ("<tab>" . company-complete-common)))
     :custom
     (company-require-match nil)
     (company-idle-delay 0)
@@ -567,7 +559,15 @@ C-q 'undo-tree-visualizer-abort
     (define-key yas-minor-mode-map [(tab)] nil)
     (define-key yas-minor-mode-map (kbd "TAB") nil)
     :bind
-    (("<f6> s" . yas-expand)))
+    (("<f19> a j" . yas-expand)))
+#+END_SRC
+* avy
+#+BEGIN_SRC emacs-lisp
+  (use-package avy
+    :straight t
+    :bind
+    (("<f19> a k" . avy-goto-char-timer))
+    )
 #+END_SRC
 * text editing
 ** duplicate line or region
@@ -601,8 +601,8 @@ C-q 'undo-tree-visualizer-abort
   (use-package drag-stuff
     :straight t
     :bind
-    ("<f6> x" . 'drag-stuff-up)
-    ("<f6> y" . 'drag-stuff-down))
+    (("<f19> a z" . 'drag-stuff-up)
+    ("<f19> b g" . 'drag-stuff-down)))
 #+END_SRC
 ** commenting
 found this on stack overflow
@@ -631,18 +631,19 @@ name based on functionality being like eclipse
     :preface
     (setq mc/list-file "~/.emacs.d/.mc-lists.el")
     :bind
-    (("<f6> k" . 'mc/mark-next-like-this)
-     ("<f6> l" . 'mc/mark-previous-like-this)
-     ("<f6> m" . 'mc/mark-all-like-this)
-     ("<f6> n" . 'mc/unmark-next-like-this)
-     ("<f6> o" . 'mc/unmark-previous-like-this)
+    (("<f19> a u" . 'mc/mark-next-like-this)
+     ("<f19> a v" . 'mc/mark-previous-like-this)
+     ("<f19> a w" . 'mc/mark-all-like-this)
+     ("<f19> a x" . 'mc/unmark-next-like-this)
+     ("<f19> a y" . 'mc/unmark-previous-like-this)
      ("<mouse-8>" . 'mc/add-cursor-on-click) ;; qmk btn4 reads as 8
      ))
   (use-package phi-search
     :straight t
-    :bind (:map mc/keymap
-                ("C-s" . phi-search)
-                ("C-r" . phi-search-backward)))
+    :bind
+    ((:map mc/keymap
+           ("C-s" . phi-search)
+           ("C-r" . phi-search-backward))))
 #+END_SRC
 ** expand region
 #+BEGIN_SRC emacs-lisp
@@ -686,24 +687,18 @@ name based on functionality being like eclipse
       (interactive)
       (push-mark)
       (er/mark-method-call))
-    (bind-key "<f5> t" 'my-mark-symbol)
-    (bind-key "<f5> u" 'my-mark-word)
-    (bind-key "<f5> y" 'my-mark-inside-quotes)
-    (bind-key "<f5> x" 'my-mark-outside-quotes)
-    (bind-key "<f5> 5" 'my-mark-outside-pairs)
-    (bind-key "<f5> 6" 'my-mark-inside-pairs)
-    (bind-key "<f6> 2" 'my-mark-comment)
-    (bind-key "<f6> 1" 'my-mark-next-accessor)
-    (bind-key "<f6> 3" 'my-mark-method-call)
+    (bind-key "<f19> b a" 'my-mark-inside-pairs)
+    (bind-key "<f19> b b" 'my-mark-outside-pairs)
+    (bind-key "<f19> b c" 'my-mark-inside-quotes)
+    (bind-key "<f19> b d" 'my-mark-outside-quotes)
+    (bind-key "<f19> b e" 'my-mark-word)
+    (bind-key "<f19> b f" 'my-mark-symbol)
     )
 #+END_SRC
 ** electric pair mode
 #+BEGIN_SRC emacs-lisp
   (electric-pair-mode)
-
-  ;; inhibit double and single quotes (because there is a bug with double quotes in org mode)
-  ;; bug: if you type (no quotes here, just literal typing) "test", then "test"" appears
-  ;; this extra " causes problems
+  ;; fix org mode bug
   (setq electric-pair-inhibit-predicate
         (lambda (c)
           (if (or (char-equal c ?\') (char-equal c ?\")) t (electric-pair-default-inhibit c))))
@@ -1169,3 +1164,8 @@ different than the built-in in that it deletes the newline before the killed lin
 **** copy-2-4
 **** copy-2-4-reverse
 **** killing a few lines one at a time can then be yanked correctly
+** register save/insert
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<f19> a n" 'copy-to-register)
+  (bind-key "<f19> a o" 'insert-register)
+#+END_SRC

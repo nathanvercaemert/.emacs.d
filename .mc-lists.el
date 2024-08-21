@@ -9,6 +9,7 @@
 	org-edit-src-save
 	org-end-of-line
 	org-self-insert-command
+	phi-search-backward
 	))
 
 (setq mc/cmds-to-run-once
