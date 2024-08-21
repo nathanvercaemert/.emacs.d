@@ -116,6 +116,57 @@
     ((prog-mode . rainbow-delimiters-mode)
      (org-mode . rainbow-delimiters-mode)))
 #+END_SRC
+** shift by indentation (number of spaces)
+#+BEGIN_SRC emacs-lisp
+  (defun my-indent-shift-left ()
+    (interactive
+     (progn
+       (if mark-active
+           (if (> (point) (mark))
+               (exchange-point-and-mark)))
+       (let ((deactivate-mark nil))
+         (if mark-active
+             (indent-rigidly (line-beginning-position) (region-end) (- 4))
+           (indent-rigidly (line-beginning-position) (line-end-position) (- 4)))))
+     )
+    )
+
+  (defun my-indent-shift-right ()
+    (interactive
+     (progn
+       (if mark-active
+           (if (> (point) (mark))
+               (exchange-point-and-mark)))
+       (let ((deactivate-mark nil))
+         (if mark-active
+             (indent-rigidly (line-beginning-position) (region-end) 4)
+           (indent-rigidly (line-beginning-position) (line-end-position) 4))))
+     )
+    )
+  (bind-key "<f5> n" 'my-indent-shift-right)
+  (bind-key "<f5> o" 'my-indent-shift-left)
+#+END_SRC
+** c
+#+BEGIN_SRC emacs-lisp
+  (defun my-c-mode-hook ()
+    (setq c-basic-offset 4)
+    (setq tab-width 4)
+    (setq indent-tabs-mode nil)
+    (setq indent-line-function 'insert-tab)
+    (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80))
+    ;; disable all c style behavior, this is radical
+    (setq c-default-style "user")
+    (setq c-cleanup-list nil)
+    (remove-hook 'c-mode-common-hook 'c-turn-on-eldoc-mode)
+    (remove-hook 'c-mode-common-hook 'c-toggle-auto-state)
+    (remove-hook 'c-mode-common-hook 'c-toggle-hungry-state)
+    (remove-hook 'c-mode-common-hook 'subword-mode)
+    (electric-pair-local-mode -1)
+    (electric-indent-local-mode -1)
+    )
+  (add-hook 'c-mode-hook 'my-c-mode-hook)
+  (add-hook 'c++-mode-hook 'my-c-mode-hook)
+#+END_SRC
 * org
 ** remove unwanted newline for C-RET M-RET
 #+BEGIN_SRC emacs-lisp
@@ -545,48 +596,6 @@ C-q 'undo-tree-visualizer-abort
         (goto-char (+ origin (* (length region) arg) arg)))))
   (bind-key "<f6> 7" 'duplicate-current-line-or-region)
 #+END_SRC
-** indentation
-*** spaces no tabs
-#+BEGIN_SRC emacs-lisp
-  (setq-default indent-tabs-mode nil)
-#+END_SRC
-*** 4 spaces
-#+BEGIN_SRC emacs-lisp
-  (setq tab-width 4)
-  (setq-default tab-width 4)
-  (setq indent-line-function 'insert-tab)
-  (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80))
-#+END_SRC
-*** shift by indentation
-#+BEGIN_SRC emacs-lisp
-  (defun my-indent-shift-left ()
-    (interactive
-     (progn
-       (if mark-active
-           (if (> (point) (mark))
-               (exchange-point-and-mark)))
-       (let ((deactivate-mark nil))
-         (if mark-active
-             (indent-rigidly (line-beginning-position) (region-end) (- 4))
-           (indent-rigidly (line-beginning-position) (line-end-position) (- 4)))))
-     )
-    )
-
-  (defun my-indent-shift-right ()
-    (interactive
-     (progn
-       (if mark-active
-           (if (> (point) (mark))
-               (exchange-point-and-mark)))
-       (let ((deactivate-mark nil))
-         (if mark-active
-             (indent-rigidly (line-beginning-position) (region-end) 4)
-           (indent-rigidly (line-beginning-position) (line-end-position) 4))))
-     )
-    )
-  (bind-key "<f5> n" 'my-indent-shift-right)
-  (bind-key "<f5> o" 'my-indent-shift-left)
-#+END_SRC
 ** drag stuff
 #+BEGIN_SRC emacs-lisp
   (use-package drag-stuff
@@ -630,7 +639,10 @@ name based on functionality being like eclipse
      ("<mouse-8>" . 'mc/add-cursor-on-click) ;; qmk btn4 reads as 8
      ))
   (use-package phi-search
-    :straight t)
+    :straight t
+    :bind (:map mc/keymap
+                ("C-s" . phi-search)
+                ("C-r" . phi-search-backward)))
 #+END_SRC
 ** expand region
 #+BEGIN_SRC emacs-lisp
