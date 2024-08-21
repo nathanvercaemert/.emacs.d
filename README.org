@@ -5,25 +5,26 @@
 * Emacs Configuration
 ** Prerequisites
 - git must be installed for packages
-  - remember to add bin and cmd (from git installation) to PATH
+  - Windows: remember to add bin and cmd (from git installation) to PATH
 ** Link Configration File
 - Junction dowload:
   - https://learn.microsoft.com/en-us/sysinternals/downloads/junction
-- Windows link: from the folder containing junction.exe, run the following command:
+- Windows soft link from the folder containing junction.exe, run the following command:
   - ./junction.exe target-directory source-directory
   - source-directory is the dowload location of .emacs.d
   - directory is the directory from which Emacs loads init.el
-- Example command for Windows link:
+- Windows example command for link:
   - .\junction.exe C:\Users\nverc\AppData\Roaming\\.emacs.d C:\Users\nverc\Dropbox\repositories\\.emacs.d\
 * QMK
+- clone fork, checkout nathanvercaemert branch
+  - https://github.com/nathanvercaemert/qmk_firmware/tree/nathanvercaemert
 ** Windows
 - Download the latest msys bundle
   - https://msys.qmk.fm/
-- clone fork, checkout nathanvercaemert branch
-  - https://github.com/nathanvercaemert/qmk_firmware/tree/nathanvercaemert
 - setup msys qmk bundle
-  - pacman -Syu (this may not be necessary, and will require terminal restart)
+  - pacman -Syu (this may not be necessary and will require terminal restart)
   - qmk setup
+** Platform Agnostic
 - set defaults
   - qmk config user.keyboard=ergodox_ez
   - qmk config user.keymap=nathanvercaemert
