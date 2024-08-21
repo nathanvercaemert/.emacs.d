@@ -4,17 +4,15 @@
 - Windows application: once extracted, create a shortcut to runemacs.exe
 * Emacs Configuration
 ** Prerequisites
-- git must be installed
+- git must be installed for packages
   - remember to add bin and cmd (from git installation) to PATH
-- For Windows: junction.exe must be available
-  - See Microsoft documentation for Junction
 ** Link Configration File
+- Junction dowload:
+  - https://learn.microsoft.com/en-us/sysinternals/downloads/junction
 - Windows link: from the folder containing junction.exe, run the following command:
   - ./junction.exe target-directory source-directory
   - source-directory is the dowload location of .emacs.d
   - directory is the directory from which Emacs loads init.el
-- Junction dowload:
-  - https://learn.microsoft.com/en-us/sysinternals/downloads/junction
 - Example command for Windows link:
   - .\junction.exe C:\Users\nverc\AppData\Roaming\\.emacs.d C:\Users\nverc\Dropbox\repositories\\.emacs.d\
 * QMK
