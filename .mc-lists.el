@@ -3,11 +3,14 @@
 
 (setq mc/cmds-to-run-for-all
       '(
-        org-beginning-of-line
-        org-end-of-line
-        org-self-insert-command
-        ))
+	cycle-spacing
+	forward-sexp
+	org-beginning-of-line
+	org-edit-src-save
+	org-end-of-line
+	org-self-insert-command
+	))
 
 (setq mc/cmds-to-run-once
       '(
-        ))
+	))
