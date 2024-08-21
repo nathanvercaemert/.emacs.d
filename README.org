@@ -21,13 +21,12 @@
 ** Windows
 - Download the latest msys bundle
   - https://msys.qmk.fm/
-  - note that it has its own installation of git
-- copy nathanvercaemert to the ez keymaps folder
+- clone fork, checkout nathanvercaemert branch
+  - https://github.com/nathanvercaemert/qmk_firmware/tree/nathanvercaemert
+- setup msys qmk bundle
+  - pacman -Syu (this may not be necessary, and will require terminal restart)
+  - qmk setup
 - set defaults
   - qmk config user.keyboard=ergodox_ez
   - qmk config user.keymap=nathanvercaemert
-- setup msys qmk bundle
-  - pacman -Syu (this may not be necessary, and will require terminal restart)
-  - navigate to fresh clone of fork
-  - qmk setup
 - "qmk compile" from root
