@@ -29,3 +29,7 @@
   - qmk config user.keyboard=ergodox_ez
   - qmk config user.keymap=nathanvercaemert
 - "qmk compile" from root
+* first-available-hotkey.py
+- run from nathanvercaemert
+- python (python3?) filename function_key_number
+- python .\keymap.c 19
