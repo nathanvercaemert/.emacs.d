@@ -31,5 +31,5 @@
 - "qmk compile" from root
 * first-available-hotkey.py
 - run from nathanvercaemert
-- python (python3?) filename function_key_number
-- python .\keymap.c 19
+- python .\first-available-hotkey.py (python3?) filename function_key_number
+- python .\first-available-hotkey.py .\keymap.c 19
