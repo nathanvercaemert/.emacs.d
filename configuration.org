@@ -314,7 +314,7 @@
 #+BEGIN_SRC emacs-lisp
   (setq dired-recursive-copies 'always)
 #+END_SRC
-* reload files when changed externally (auto revert)
+* TODO reload files when changed externally (auto revert)
 ** turn auto-revert-mode on everywhere
 #+BEGIN_SRC emacs-lisp
   (global-auto-revert-mode)
@@ -777,10 +777,6 @@ different than the built-in in that it deletes the newline before the killed lin
     (move-end-of-line nil)
     (insert (car kill-ring-yank-pointer))
     )
-
-  (bind-key "<f6> 4" 'my-kill-all-lines-in-region)
-  (bind-key "<f6> 5" 'my-paste-line)
-  (bind-key "<f6> 6" 'my-copy-all-lines-in-region)
 #+END_SRC
 *** test my-delete-all-lines-in-region
 #+NAME: test-my-kill-or-copy-all-lines-in-region
